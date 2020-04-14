@@ -11,5 +11,6 @@
     <orderEntry type="library" name="peersim-1.0.5" level="project" />
     <orderEntry type="library" name="djep-1.0.0" level="project" />
     <orderEntry type="library" name="jep-2.3.0" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

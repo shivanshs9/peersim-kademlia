@@ -1,5 +1,7 @@
 package peersim.kademlia;
 
+import peersim.kademlia.events.SimpleEvent;
+
 import java.math.BigInteger;
 
 /**

@@ -19,6 +19,7 @@ import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
+import peersim.kademlia.events.SimpleEvent;
 import peersim.transport.UnreliableTransport;
 
 //__________________________________________________________________________________________________
@@ -301,7 +302,7 @@ public class KademliaProtocol implements Cloneable, EDProtocol {
 		transport = (UnreliableTransport) (Network.prototype).getProtocol(tid);
 		transport.send(src, dest, m, kademliaid);
 
-		if (m.getType() == Message.MSG_ROUTE) { // is a request
+		if (m.type == Message.MSG_ROUTE) { // is a request
 			Timeout t = new Timeout(destId, m.id, m.operationId);
 			long latency = transport.getLatency(src, dest);
 
@@ -328,7 +329,7 @@ public class KademliaProtocol implements Cloneable, EDProtocol {
 
 		Message m;
 
-		switch (((SimpleEvent) event).getType()) {
+		switch (((SimpleEvent) event).type) {
 
 			case Message.MSG_RESPONSE:
 				m = (Message) event;
