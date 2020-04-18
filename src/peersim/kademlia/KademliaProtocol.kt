@@ -48,8 +48,9 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
 
     private fun iterativeNodeLookup(message: ProtocolOperation<BigInteger>) {
         val key = message.data ?: return
-        val findOp = FindCloseNodesOperation(key, message)
-        setFindOps[findOp.operationId] = findOp
+        val findOp = message.refMsgId?.let { setFindOps[it] } ?: FindCloseNodesOperation(key, message).also {
+            setFindOps[it.operationId] = it
+        }
         val neighbors = routingTable.getNeighbours(key, nodeId)
         findOp.refreshClosestNodes(neighbors)
         findOp.availableRequests = KademliaCommonConfig.ALPHA
@@ -70,13 +71,9 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
         }
     }
 
-    private fun iterativeFindNode(message: FindNodeOperation) {
-        iterativeNodeLookup(message)
-    }
+    private fun iterativeFindNode(message: FindNodeOperation) = iterativeNodeLookup(message)
 
-    private fun iterativeFindValue(message: FindValueOperation) {
-        iterativeNodeLookup(message)
-    }
+    private fun iterativeFindValue(message: FindValueOperation) = iterativeNodeLookup(message)
 
     private fun findClosestContacts(message: RPCPrimitive<BigInteger>) {
         val key = message.data ?: return
@@ -123,8 +120,13 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
                 // Search operation finished
                 setFindOps.remove(findOp.operationId)
 
+                // Maybe the find operation is requested by another operation
+                val resMsg = findOp.message.refMsgId?.let {
+                    sentRpcs.remove(it) as? ProtocolOperation<*>
+                } ?: findOp.message
+
                 // Send back the response cross-protocol
-                val response = ResultFindNodeOperation(findOp.message, findOp.result)
+                val response = ResultFindNodeOperation(resMsg, findOp.result)
                 sendMessage(response, protocolPid = response.protocolPid)
 
                 // update observer statistics
@@ -147,7 +149,35 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
         val findOp = setFindOps.remove(message.operationId) ?: return
 
         // Send back the response cross-protocol
-        val response = ResultFindValueOperation(findOp.message, message.data)
+        val response = ResultFindValueOperation(findOp.message as FindValueOperation, message.data)
+        sendMessage(response, protocolPid = response.protocolPid)
+    }
+
+    private fun storeInDht(message: StorePrimitive) {
+        message.data?.also {
+            dhtTable.store(it.first, it.second)
+        }
+    }
+
+    private fun iterativeStore(message: StoreValueOperation) {
+        val key = message.data?.first ?: return
+        sentRpcs[message.id] = message
+        val findNodeOp = FindNodeOperation(kademliaId, nodeId, key).apply { refMsgId = message.id }
+        val findOp = FindCloseNodesOperation(key, findNodeOp)
+        setFindOps[findOp.operationId] = findOp
+
+        // Schedule Find NODE Operation
+        sendMessage(findNodeOp)
+    }
+
+    private fun continueWithStore(message: StoreValueOperation, neighbors: Set<BigInteger>?) = neighbors?.also { neighbors ->
+        if (message.data == null) return@also
+        neighbors.forEach {
+            val storeMsg = StorePrimitive(nodeId, it, message.data)
+            sendMessage(storeMsg)
+        }
+        dhtTable.store(message.data.first, message.data.second)
+        val response = ResultStoreValueOperation(message)
         sendMessage(response, protocolPid = response.protocolPid)
     }
 
@@ -217,6 +247,10 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
                 syncRoutingTable(event.srcNodeId)
                 findValueElseClosestContacts(event)
             }
+            is StorePrimitive -> {
+                syncRoutingTable(event.srcNodeId)
+                storeInDht(event)
+            }
             is ResultFindNodePrimitive -> {
                 syncRoutingTable(event.srcNodeId)
                 respondBackWithContacts(event)
@@ -233,6 +267,10 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
                     val msg = sentRpcs.remove(event.msgId) as? RPCPrimitive<BigInteger>
                     if (msg != null) handleNodeLookupTimeout(event, msg)
                 }
+            }
+            is StoreValueOperation -> iterativeStore(event)
+            is ResultFindNodeOperation -> {
+                if (event.requestOp is StoreValueOperation) continueWithStore(event.requestOp, event.data)
             }
         }
     }

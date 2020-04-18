@@ -10,17 +10,16 @@ import java.math.BigInteger
  */
 class FindNodeOperation(
         protocolPid: Int,
-        srcNodeId: BigInteger,
-        destNodeId: BigInteger,
+        nodeId: BigInteger,
         key: BigInteger
-) : ProtocolOperation<BigInteger>(protocolPid, srcNodeId, destNodeId, key, type = TYPE_FIND_NODE) {
+) : ProtocolOperation<BigInteger>(protocolPid, nodeId, key, type = TYPE_FIND_NODE) {
     companion object {
         val TYPE_FIND_NODE = "fnode".toAscii()
     }
 }
 
 class ResultFindNodeOperation(
-        msg: ProtocolOperation<BigInteger>,
+        msg: ProtocolOperation<*>,
         contacts: Set<BigInteger>,
         status: Int = STATUS_SUCCESS
 ) : ProtocolResultOperation<Set<BigInteger>>(msg, contacts, status = status)

@@ -67,7 +67,7 @@ public class TrafficGenerator implements Control {
 		// send message
 		BigInteger targetId = generateRandomTarget();
 		BigInteger startId = ((KademliaProtocol) start.getProtocol(pid)).nodeId;
-		FindNodeOperation message = new FindNodeOperation(pid, startId, startId, targetId);
+		FindNodeOperation message = new FindNodeOperation(pid, startId, targetId);
 		EDSimulator.add(0, message, start, pid);
 
 		return false;

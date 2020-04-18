@@ -1,19 +1,21 @@
 package peersim.kademlia.rpc
 
 import peersim.kademlia.events.RPCPrimitive
+import peersim.kademlia.events.RPCResultPrimitive
 import peersim.kademlia.toAscii
 import java.math.BigInteger
 
 class StorePrimitive(
         srcNodeId: BigInteger,
         destNodeId: BigInteger,
-        key: String,
-        value: Any
-) : RPCPrimitive<Pair<Int, Any>>(srcNodeId, destNodeId, data = getData(key, value), type = TYPE_STORE) {
+        data: Pair<BigInteger, Any>
+) : RPCPrimitive<Pair<BigInteger, Any>>(srcNodeId, destNodeId, data, type = TYPE_STORE) {
     companion object {
         val TYPE_STORE: Int = "store".toAscii()
-        private fun getData(key: String, value: Any): Pair<Int, Any> {
-            return key.hashCode() to value
-        }
     }
 }
+
+class ResultStorePrimitive(
+        msg: StorePrimitive,
+        status: Int = STATUS_SUCCESS
+) : RPCResultPrimitive<BigInteger>(msg, msg.data!!.first, status = status)

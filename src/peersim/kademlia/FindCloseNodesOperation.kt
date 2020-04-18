@@ -4,8 +4,12 @@ import peersim.kademlia.events.ProtocolOperation
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicLong
 
-class FindCloseNodesOperation(val nodeId: BigInteger, val message: ProtocolOperation<BigInteger>, val timestamp: Long = message.timestamp) {
-    val operationId = uniqueId
+class FindCloseNodesOperation(
+        val nodeId: BigInteger,
+        val message: ProtocolOperation<*>,
+        val timestamp: Long = message.timestamp,
+        val operationId: Long = message.refMsgId ?: uniqueId
+) {
     var availableRequests = KademliaCommonConfig.ALPHA
 
     /**

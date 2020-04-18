@@ -151,7 +151,7 @@ public class Turbulence implements Control {
 
 		// create auto-search message (search message with destination my own Id)
 		BigInteger startId = ((KademliaProtocol) start.getProtocol(kademliaid)).nodeId;
-		FindNodeOperation m = new FindNodeOperation(kademliaid, startId, newKad.nodeId, newKad.nodeId);
+		FindNodeOperation m = new FindNodeOperation(kademliaid, newKad.nodeId, startId);
 
 		// perform initialization
 		newKad.getRoutingTable().addNeighbour(((KademliaProtocol) (start.getProtocol(kademliaid))).nodeId);
@@ -160,7 +160,7 @@ public class Turbulence implements Control {
 		EDSimulator.add(0, m, newNode, kademliaid);
 
 		// find another random node (this is to enrich the k-buckets)
-		FindNodeOperation m1 = new FindNodeOperation(kademliaid, startId, newKad.nodeId, urg.generate());
+		FindNodeOperation m1 = new FindNodeOperation(kademliaid, newKad.nodeId, urg.generate());
 		EDSimulator.add(0, m, newNode, kademliaid);
 
 		return false;
