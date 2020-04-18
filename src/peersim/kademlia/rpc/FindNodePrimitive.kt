@@ -18,8 +18,8 @@ class FindNodePrimitive(
 
 class ResultFindNodePrimitive(
         msg: RPCPrimitive<BigInteger>,
-        contacts: Array<BigInteger>,
+        contacts: List<BigInteger>,
         val key: BigInteger,
         val operationId: Long,
         status: Int = STATUS_SUCCESS
-) : RPCResultPrimitive<Array<BigInteger>>(msg, contacts, status = status)
+) : RPCResultPrimitive<List<BigInteger>>(msg, contacts, status = status)

@@ -24,7 +24,7 @@ class DHTable : Cloneable {
         fun hash(key: String): BigInteger {
             hashFunction.reset() // TODO: is it necessary?
             val digest = hashFunction.digest(key.toByteArray())
-            return BigInteger(KademliaCommonConfig.BITS, digest)
+            return BigInteger(1, digest)
         }
     }
 }

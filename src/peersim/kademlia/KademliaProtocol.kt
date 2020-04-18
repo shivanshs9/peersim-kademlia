@@ -127,13 +127,16 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
 
                 // Send back the response cross-protocol
                 val response = ResultFindNodeOperation(resMsg, findOp.result)
-                sendMessage(response, protocolPid = response.protocolPid)
+                sendMessage(response, protocolPid = findOp.message.protocolPid)
 
                 // update observer statistics
                 val timeInterval: Long = CommonState.getTime() - findOp.timestamp
                 KademliaObserver.timeStore.add(timeInterval.toDouble())
                 KademliaObserver.hopStore.add(findOp.nrHops.toDouble())
                 KademliaObserver.msg_deliv.add(1.0)
+
+                // exit loop
+                break
             } else break // no new neighbors but pending outstanding requests
         }
     }
@@ -261,6 +264,7 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
             }
             is RPCTimeout -> {
                 if (sentRpcs.containsKey(event.msgId)) {
+                    print("${CommonState.getTime()}  -> RPC timeout")
                     // Remove from routing table since no RPC response
                     routingTable.removeNeighbour(event.nodeId)
                     // timeout occurred and RPC not received

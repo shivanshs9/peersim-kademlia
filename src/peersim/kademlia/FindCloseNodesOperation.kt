@@ -32,7 +32,7 @@ class FindCloseNodesOperation(
                     availableRequests--
                 }
 
-    fun refreshClosestNodes(neighbors: Array<BigInteger>) {
+    fun refreshClosestNodes(neighbors: List<BigInteger>) {
         neighbors.forEach {
             if (it !in closestSet) {
                 if (closestSet.size < KademliaCommonConfig.K)

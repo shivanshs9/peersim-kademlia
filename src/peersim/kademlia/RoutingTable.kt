@@ -1,138 +1,85 @@
-package peersim.kademlia;
+package peersim.kademlia
 
-import java.math.BigInteger;
-import java.util.*;
+import peersim.kademlia.Util.distance
+import peersim.kademlia.Util.prefixLen
+import java.math.BigInteger
+import java.util.*
 
 /**
- * Gives an implementation for the rounting table component of a kademlia node
- * 
- * @author Daniele Furlan, Maurizio Bonani
- * @version 1.0
+ * Implementation of Routing Table of a node as given in Kademlia spec
  */
-public class RoutingTable implements Cloneable {
+class RoutingTable : Cloneable {
+    // NodeID of the node
+    lateinit var nodeId: BigInteger
 
-	// node ID of the node
-	public BigInteger nodeId = null;
+    // k-buckets
+    private val kBuckets: Array<KBucket> = Array(KademliaCommonConfig.BITS + 1) { KBucket() }
 
-	// k-buckets
-	public TreeMap<Integer, KBucket> k_buckets = null;
+    // add a neighbour to the correct k-bucket
+    fun addNeighbour(node: BigInteger) {
+        kBuckets[prefixLen(nodeId, node)].addNeighbour(node)
+    }
 
-	// ______________________________________________________________________________________________
-	/**
-	 * instanciates a new empty routing table with the specified size
-	 */
-	public RoutingTable() {
-		k_buckets = new TreeMap<Integer, KBucket>();
-		// initialize k-bukets
-		for (int i = 0; i <= KademliaCommonConfig.BITS; i++) {
-			k_buckets.put(i, new KBucket());
-		}
-	}
+    // remove a neighbour from the correct k-bucket
+    fun removeNeighbour(node: BigInteger) {
+        kBuckets[prefixLen(nodeId, node)].removeNeighbour(node)
+    }
 
-	// add a neighbour to the correct k-bucket
-	public void addNeighbour(BigInteger node) {
-		// get the lenght of the longest common prefix (correspond to the correct k-bucket)
-		int prefix_len = Util.prefixLen(nodeId, node);
+    // return the closest neighbour to a key from the correct k-bucket
+    fun getNeighbours(key: BigInteger, src: BigInteger): List<BigInteger> {
+        // neighbour candidates
+        val candidates = ArrayList<BigInteger>()
 
-		// add the node to the k-bucket
-		k_buckets.get(prefix_len).addNeighbour(node);
-	}
+        // get the length of the longest common prefix
+        var lcpLength = prefixLen(nodeId, key)
 
-	// remove a neighbour from the correct k-bucket
-	public void removeNeighbour(BigInteger node) {
-		// get the lenght of the longest common prefix (correspond to the correct k-bucket)
-		int prefix_len = Util.prefixLen(nodeId, node);
+        // return the k-bucket if is full
+        if (kBuckets[lcpLength].neighbours.size >= KademliaCommonConfig.K) {
+            return kBuckets[lcpLength].neighbours.keys.apply {
+                remove(src)
+            }.toList()
+        }
+        // else get k closest node from all k-buckets
+        lcpLength = 0
+        while (lcpLength < KademliaCommonConfig.ALPHA) {
+            candidates.addAll(kBuckets[lcpLength].neighbours.keys)
+            lcpLength++
+        }
+        // remove source id
+        candidates.remove(src)
 
-		// add the node to the k-bucket
-		k_buckets.get(prefix_len).removeNeighbour(node);
-	}
+        // create a map (distance, node)
+        val distanceMap = TreeMap<BigInteger, BigInteger>()
+        for (node in candidates) {
+            distanceMap[distance(node, key)] = node
+        }
+        return distanceMap.values.take(KademliaCommonConfig.K)
+    }
 
-	// return the closest neighbour to a key from the correct k-bucket
-	public BigInteger[] getNeighbours(final BigInteger key, final BigInteger src) {
-		// resulting neighbours
-		BigInteger[] result = new BigInteger[KademliaCommonConfig.K];
+    // ______________________________________________________________________________________________
+    public override fun clone(): Any {
+        return RoutingTable()
+    }
 
-		// neighbour candidates
-		ArrayList<BigInteger> neighbour_candidates = new ArrayList<BigInteger>();
+    /**
+     * returns the neighbour counts
+     *
+     * @return int
+     */
+    fun degree(): Int {
+        var size = 0
+        for (i in kBuckets.indices) size += kBuckets[i].neighbours.size
+        return size
+    }
 
-		// get the lenght of the longest common prefix
-		int prefix_len = Util.prefixLen(nodeId, key);
-
-		// return the k-bucket if is full
-		if (k_buckets.get(prefix_len).neighbours.size() >= KademliaCommonConfig.K) {
-			return k_buckets.get(prefix_len).neighbours.keySet().toArray(result);
-		}
-
-		// else get k closest node from all k-buckets
-		prefix_len = 0;
-		while (prefix_len < KademliaCommonConfig.ALPHA) {
-			neighbour_candidates.addAll(k_buckets.get(prefix_len).neighbours.keySet());
-			// remove source id
-			neighbour_candidates.remove(src);
-			prefix_len++;
-		}
-
-		// create a map (distance, node)
-		TreeMap<BigInteger, BigInteger> distance_map = new TreeMap<BigInteger, BigInteger>();
-
-		for (BigInteger node : neighbour_candidates) {
-			distance_map.put(Util.distance(node, key), node);
-		}
-
-		int i = 0;
-		for (BigInteger iii : distance_map.keySet()) {
-			if (i < KademliaCommonConfig.K) {
-				result[i] = distance_map.get(iii);
-				i++;
-			}
-		}
-
-		return result;
-	}
-
-	// ______________________________________________________________________________________________
-	public Object clone() {
-		RoutingTable dolly = new RoutingTable();
-		for (int i = 0; i < KademliaCommonConfig.BITS; i++) {
-			k_buckets.put(i, new KBucket());// (KBucket) k_buckets.get(i).clone());
-		}
-		return dolly;
-	}
-
-	/**
-	 * returns the neighbour counts
-	 *
-	 * @return int
-	 */
-	public int degree() {
-		int size = 0;
-		for (int i = 0; i < k_buckets.size(); i++)
-			size += k_buckets.get(i).neighbours.size();
-		return size;
-	}
-
-	/**
-	 * returns the neighbour set
-	 *
-	 * @return Set<BigInteger>
-	 */
-	public Set<BigInteger> neighbourSet() {
-		Set<BigInteger> result = new HashSet<>(degree());
-		for (int i = 0; i < k_buckets.size(); i++)
-				result.addAll(k_buckets.get(i).neighbours.keySet());
-		return result;
-	}
-
-	// ______________________________________________________________________________________________
-	/**
-	 * print a string representation of the table
-	 * 
-	 * @return String
-	 */
-	public String toString() {
-		return "";
-	}
-	// ______________________________________________________________________________________________
-
-} // End of class
-// ______________________________________________________________________________________________
+    /**
+     * returns the neighbour set
+     *
+     * @return Set<BigInteger>
+    </BigInteger> */
+    fun neighbourSet(): Set<BigInteger> {
+        val result: MutableSet<BigInteger> = HashSet(degree())
+        for (i in kBuckets.indices) result.addAll(kBuckets[i].neighbours.keys)
+        return result
+    }
+}
