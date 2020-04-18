@@ -8,7 +8,8 @@ import java.math.BigInteger
 class FindNodePrimitive(
         srcNodeId: BigInteger,
         destNodeId: BigInteger,
-        key: BigInteger
+        key: BigInteger,
+        val operationId: Long
 ) : RPCPrimitive<BigInteger>(srcNodeId, destNodeId, key, type = TYPE_FIND_NODE) {
     companion object {
         val TYPE_FIND_NODE = "fnode".toAscii()
@@ -16,6 +17,9 @@ class FindNodePrimitive(
 }
 
 class ResultFindNodePrimitive(
-        msg: FindNodePrimitive,
-        contacts: Set<BigInteger>
-) : RPCResultPrimitive<Set<BigInteger>>(msg, contacts, type = FindNodePrimitive.TYPE_FIND_NODE)
+        msg: RPCPrimitive<BigInteger>,
+        contacts: Array<BigInteger>,
+        val key: BigInteger,
+        val operationId: Long,
+        status: Int = STATUS_SUCCESS
+) : RPCResultPrimitive<Array<BigInteger>>(msg, contacts, status = status)

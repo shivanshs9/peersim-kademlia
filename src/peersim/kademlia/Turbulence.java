@@ -1,7 +1,5 @@
 package peersim.kademlia;
 
-import java.util.Comparator;
-
 import peersim.config.Configuration;
 import peersim.core.CommonState;
 import peersim.core.Control;
@@ -9,9 +7,13 @@ import peersim.core.Network;
 import peersim.core.Node;
 import peersim.dynamics.NodeInitializer;
 import peersim.edsim.EDSimulator;
+import peersim.kademlia.rpc.FindNodeOperation;
+
+import java.math.BigInteger;
+import java.util.Comparator;
 
 /**
- * Turbulcen class is only for test/statistical purpose. This Control execute a node add or remove (failure) with a given
+ * Turbulence class is only for test/statistical purpose. This Control execute a node add or remove (failure) with a given
  * probability.<br>
  * The probabilities are configurabily from the parameters p_idle, p_add, p_rem.<BR>
  * - p_idle (default = 0): probability that the current execution does nothing (i.e. no adding and no failures).<br>
@@ -125,7 +127,6 @@ public class Turbulence implements Control {
 
 	// ______________________________________________________________________________________________
 	public boolean add() {
-
 		// Add Node
 		Node newNode = (Node) Network.prototype.clone();
 		for (int j = 0; j < inits.length; ++j)
@@ -137,7 +138,7 @@ public class Turbulence implements Control {
 
 		// set node Id
 		UniformRandomGenerator urg = new UniformRandomGenerator(KademliaCommonConfig.BITS, CommonState.r);
-		((KademliaProtocol) (newNode.getProtocol(kademliaid))).setNodeId(urg.generate());
+		((KademliaProtocol) (newNode.getProtocol(kademliaid))).setNode(urg.generate(), newNode);
 
 		// sort network
 		sortNet();
@@ -148,21 +149,19 @@ public class Turbulence implements Control {
 			start = Network.get(CommonState.r.nextInt(Network.size()));
 		} while ((start == null) || (!start.isUp()));
 
-		// create auto-search message (searc message with destination my own Id)
-		Message m = Message.makeFindNode("Bootstrap traffic");
-		m.timestamp = CommonState.getTime();
-		m.dest = newKad.nodeId;
+		// create auto-search message (search message with destination my own Id)
+		BigInteger startId = ((KademliaProtocol) start.getProtocol(kademliaid)).nodeId;
+		FindNodeOperation m = new FindNodeOperation(kademliaid, startId, newKad.nodeId, newKad.nodeId);
 
 		// perform initialization
-		newKad.routingTable.addNeighbour(((KademliaProtocol) (start.getProtocol(kademliaid))).nodeId);
+		newKad.getRoutingTable().addNeighbour(((KademliaProtocol) (start.getProtocol(kademliaid))).nodeId);
 
 		// start auto-search
 		EDSimulator.add(0, m, newNode, kademliaid);
 
 		// find another random node (this is to enrich the k-buckets)
-		Message m1 = Message.makeFindNode("Bootstrap traffic");
-		m1.timestamp = CommonState.getTime();
-		m1.dest = urg.generate();
+		FindNodeOperation m1 = new FindNodeOperation(kademliaid, startId, newKad.nodeId, urg.generate());
+		EDSimulator.add(0, m, newNode, kademliaid);
 
 		return false;
 	}

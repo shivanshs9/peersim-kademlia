@@ -1,18 +1,18 @@
 package peersim.kademlia;
 
-import java.util.Comparator;
-
 import peersim.config.Configuration;
 import peersim.core.CommonState;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.transport.Transport;
 
+import java.util.Comparator;
+
 /**
  * Initialization class that performs the bootsrap filling the k-buckets of all initial nodes.<br>
  * In particular every node is added to the routing table of every other node in the network. In the end however the various nodes
  * doesn't have the same k-buckets because when a k-bucket is full a random node in it is deleted.
- * 
+ *
  * @author Daniele Furlan, Maurizio Bonani
  * @version 1.0
  */
@@ -71,7 +71,7 @@ public class StateBuilder implements peersim.core.Control {
 
 			for (int k = 0; k < 100; k++) {
 				KademliaProtocol jKad = (KademliaProtocol) (Network.get(CommonState.r.nextInt(sz)).getProtocol(kademliaid));
-				iKad.routingTable.addNeighbour(jKad.nodeId);
+				iKad.getRoutingTable().addNeighbour(jKad.nodeId);
 			}
 		}
 
@@ -88,7 +88,7 @@ public class StateBuilder implements peersim.core.Control {
 				start = start++;
 				if (start > 0 && start < sz) {
 					KademliaProtocol jKad = (KademliaProtocol) (Network.get(start++).getProtocol(kademliaid));
-					iKad.routingTable.addNeighbour(jKad.nodeId);
+					iKad.getRoutingTable().addNeighbour(jKad.nodeId);
 				}
 			}
 		}

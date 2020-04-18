@@ -24,7 +24,7 @@ abstract class RPC<out T>(
 
         private val ID_GENERATOR = AtomicLong()
 
-        val uniqueId
+        private val uniqueId
             get() = ID_GENERATOR.incrementAndGet()
     }
 }

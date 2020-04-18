@@ -8,8 +8,9 @@ import java.math.BigInteger
 class FindValuePrimitive(
         srcNodeId: BigInteger,
         destNodeId: BigInteger,
-        key: String
-) : RPCPrimitive<Int>(srcNodeId, destNodeId, key.hashCode(), type = TYPE_FIND_VALUE) {
+        key: BigInteger,
+        val operationId: Long
+) : RPCPrimitive<BigInteger>(srcNodeId, destNodeId, key, type = TYPE_FIND_VALUE) {
     companion object {
         val TYPE_FIND_VALUE = "fvalue".toAscii()
     }
@@ -17,5 +18,7 @@ class FindValuePrimitive(
 
 class ResultFindValuePrimitive(
         msg: FindValuePrimitive,
-        value: Any?
-) : RPCResultPrimitive<Any?>(msg, value)
+        value: Any?,
+        val operationId: Long = msg.operationId,
+        status: Int = STATUS_SUCCESS
+) : RPCResultPrimitive<Any?>(msg, value, status = status)

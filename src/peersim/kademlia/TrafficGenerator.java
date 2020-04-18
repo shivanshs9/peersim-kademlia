@@ -6,6 +6,9 @@ import peersim.core.Control;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
+import peersim.kademlia.rpc.FindNodeOperation;
+
+import java.math.BigInteger;
 
 /**
  * This control generates random search traffic from nodes to random destination node.
@@ -31,27 +34,22 @@ public class TrafficGenerator implements Control {
 	// ______________________________________________________________________________________________
 	public TrafficGenerator(String prefix) {
 		pid = Configuration.getPid(prefix + "." + PAR_PROT);
-
 	}
 
 	// ______________________________________________________________________________________________
+
 	/**
 	 * generates a random find node message, by selecting randomly the destination.
-	 * 
+	 *
 	 * @return Message
 	 */
-	private Message generateFindNodeMessage() {
-		Message m = Message.makeFindNode("Automatically Generated Traffic");
-		m.timestamp = CommonState.getTime();
-
+	private BigInteger generateRandomTarget() {
 		// existing active destination node
 		Node n = Network.get(CommonState.r.nextInt(Network.size()));
 		while (!n.isUp()) {
 			n = Network.get(CommonState.r.nextInt(Network.size()));
 		}
-		m.dest = ((KademliaProtocol) (n.getProtocol(pid))).nodeId;
-
-		return m;
+		return ((KademliaProtocol) (n.getProtocol(pid))).nodeId;
 	}
 
 	// ______________________________________________________________________________________________
@@ -67,7 +65,10 @@ public class TrafficGenerator implements Control {
 		} while ((start == null) || (!start.isUp()));
 
 		// send message
-		EDSimulator.add(0, generateFindNodeMessage(), start, pid);
+		BigInteger targetId = generateRandomTarget();
+		BigInteger startId = ((KademliaProtocol) start.getProtocol(pid)).nodeId;
+		FindNodeOperation message = new FindNodeOperation(pid, startId, startId, targetId);
+		EDSimulator.add(0, message, start, pid);
 
 		return false;
 	}
