@@ -102,7 +102,7 @@ public class Turbulence implements Control {
 			System.err.println("Wrong event probabilty in Turbulence class: the sum of PAR_IDLE, PAR_ADD and PAR_REM must be 1");
 		}
 
-		System.err.println(String.format("Turbolence: [p_idle=%f] [p_add=%f] [(min,max)=(%d,%d)]", p_idle, p_add, maxsize, minsize));
+		System.err.println(String.format("Turbolence: [p_idle=%f] [p_add=%f] [(min,max)=(%d,%d)]", p_idle, p_add, minsize, maxsize));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -161,7 +161,7 @@ public class Turbulence implements Control {
 
 		// find another random node (this is to enrich the k-buckets)
 		FindNodeOperation m1 = new FindNodeOperation(kademliaid, newKad.nodeId, urg.generate());
-		EDSimulator.add(0, m, newNode, kademliaid);
+		EDSimulator.add(0, m1, newNode, kademliaid);
 
 		return false;
 	}

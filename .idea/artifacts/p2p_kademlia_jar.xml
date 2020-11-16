@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact name="p2p-kademlia:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/p2p_kademlia_jar</output-path>
+    <root id="root">
+      <element id="archive" name="p2p-kademlia.jar">
+        <element id="module-output" name="p2p-kademlia" />
+      </element>
+      <element id="library" level="project" name="peersim-1.0.5" />
+      <element id="library" level="project" name="jep-2.3.0" />
+      <element id="library" level="project" name="KotlinJavaRuntime" />
+      <element id="library" level="project" name="djep-1.0.0" />
+    </root>
+  </artifact>
+</component>

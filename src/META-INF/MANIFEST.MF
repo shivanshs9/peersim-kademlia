@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Main-Class: 
+Class-Path: peersim-1.0.5.jar jep-2.3.0.jar kotlin-stdlib.jar kotlin-ref
+ lect.jar kotlin-test.jar kotlin-stdlib-jdk7.jar kotlin-stdlib-jdk8.jar 
+ djep-1.0.0.jar
+
