@@ -27,7 +27,6 @@ import java.util.Comparator;
  * @author Daniele Furlan, Maurizio Bonani
  * @version 1.0
  */
-
 public class Turbulence implements Control {
 
 	private static final String PAR_PROT = "protocol";
@@ -60,7 +59,14 @@ public class Turbulence implements Control {
 	 */
 	private static final String PAR_REM = "p_rem";
 
-	/** node initializers to apply on the newly added nodes */
+	/**
+	 * Time delay (in ms) to start churning
+	 */
+	private static final String PAR_TIME_DELAY = "delay_start";
+
+	/**
+	 * node initializers to apply on the newly added nodes
+	 */
 	protected NodeInitializer[] inits;
 
 	private String prefix;
@@ -72,14 +78,20 @@ public class Turbulence implements Control {
 	private double p_add;
 	private double p_rem;
 
+	private int delayStart;
+	private long startTime;
+
 	// ______________________________________________________________________________________________
 	public Turbulence(String prefix) {
+		startTime = System.currentTimeMillis();
+
 		this.prefix = prefix;
 		kademliaid = Configuration.getPid(this.prefix + "." + PAR_PROT);
 		transportid = Configuration.getPid(this.prefix + "." + PAR_TRANSPORT);
 
 		minsize = Configuration.getInt(this.prefix + "." + PAR_MINSIZE, 1);
 		maxsize = Configuration.getInt(this.prefix + "." + PAR_MAXSIZE, Integer.MAX_VALUE);
+		delayStart = Configuration.getInt(this.prefix + "." + PAR_TIME_DELAY, 0);
 
 		Object[] tmp = Configuration.getInstanceArray(prefix + "." + PAR_INIT);
 		inits = new NodeInitializer[tmp.length];
@@ -182,6 +194,8 @@ public class Turbulence implements Control {
 
 	// ______________________________________________________________________________________________
 	public boolean execute() {
+		if (System.currentTimeMillis() - startTime < delayStart) return false;
+
 		// throw the dice
 		double dice = CommonState.r.nextDouble();
 		if (dice < p_idle)
@@ -204,6 +218,5 @@ public class Turbulence implements Control {
 
 		return false;
 	}
-
 } // End of class
 
