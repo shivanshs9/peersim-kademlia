@@ -65,6 +65,11 @@ public class Turbulence implements Control {
 	private static final String PAR_TIME_DELAY = "delay_start";
 
 	/**
+	 * Upper bound for turbulence (add/remove) per step
+	 */
+	private static final String PAR_TURBULENCE_UPPER_BOUND = "max_change";
+
+	/**
 	 * node initializers to apply on the newly added nodes
 	 */
 	protected NodeInitializer[] inits;
@@ -80,6 +85,7 @@ public class Turbulence implements Control {
 
 	private int delayStart;
 	private long startTime;
+	private long maxChange;
 
 	// ______________________________________________________________________________________________
 	public Turbulence(String prefix) {
@@ -92,6 +98,7 @@ public class Turbulence implements Control {
 		minsize = Configuration.getInt(this.prefix + "." + PAR_MINSIZE, 1);
 		maxsize = Configuration.getInt(this.prefix + "." + PAR_MAXSIZE, Integer.MAX_VALUE);
 		delayStart = Configuration.getInt(this.prefix + "." + PAR_TIME_DELAY, 0);
+		maxChange = Configuration.getLong(this.prefix + "." + PAR_TURBULENCE_UPPER_BOUND, 2);
 
 		Object[] tmp = Configuration.getInstanceArray(prefix + "." + PAR_INIT);
 		inits = new NodeInitializer[tmp.length];
@@ -206,17 +213,23 @@ public class Turbulence implements Control {
 		for (int i = 0; i < Network.size(); i++)
 			if (!Network.get(i).isUp())
 				sz--;
+		long changeCount = CommonState.r.nextLong(maxChange);
 
 		// perform the correct operation basing on the probability
 		if (dice < p_idle) {
 			return false; // do nothing
 		} else if (dice < (p_idle + p_add) && sz < maxsize) {
+			System.out.printf("%s: ADD %d%n", TAG, changeCount);
+			while (--changeCount > 0) add();
 			return add();
 		} else if (sz > minsize) {
+			System.out.printf("%s: REMOVE %d%n", TAG, changeCount);
+			while (--changeCount > 0) rem();
 			return rem();
 		}
 
 		return false;
 	}
-} // End of class
 
+	private static final String TAG = "Turbulence";
+} // End of class
