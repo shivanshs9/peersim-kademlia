@@ -12,8 +12,10 @@ import java.math.BigInteger
 class FindValueOperation(
         protocolPid: Int,
         nodeId: BigInteger,
-        key: String
-) : ProtocolOperation<BigInteger>(protocolPid, nodeId, DHTable.hash(key), type = TYPE_FIND_NODE) {
+        key: BigInteger
+) : ProtocolOperation<BigInteger>(protocolPid, nodeId, key, type = TYPE_FIND_NODE) {
+    constructor(protocolPid: Int, nodeId: BigInteger, key: String) : this(protocolPid, nodeId, DHTable.hash(key))
+
     companion object {
         val TYPE_FIND_NODE = "fnode".toAscii()
     }

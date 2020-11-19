@@ -12,15 +12,13 @@ import java.math.BigInteger
 class StoreValueOperation(
         protocolPid: Int,
         nodeId: BigInteger,
-        key: String,
+        key: BigInteger,
         value: Any
-) : ProtocolOperation<Pair<BigInteger, Any>>(protocolPid, nodeId, getData(key, value), type = TYPE_STORE) {
+) : ProtocolOperation<Pair<BigInteger, Any>>(protocolPid, nodeId, key to value, type = TYPE_STORE) {
+    constructor(protocolPid: Int, nodeId: BigInteger, key: String, value: Any) : this(protocolPid, nodeId, DHTable.hash(key), value)
+
     companion object {
         val TYPE_STORE: Int = "store".toAscii()
-
-        private fun getData(key: String, value: Any): Pair<BigInteger, Any> {
-            return DHTable.hash(key) to value
-        }
     }
 }
 
