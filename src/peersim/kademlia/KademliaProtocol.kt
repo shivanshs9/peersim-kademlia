@@ -222,13 +222,13 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
         routingTable.addNeighbour(targetNodeId)
     }
 
-    fun sendMessage(message: RPC<*>, protocolPid: Int = kademliaId) {
+    fun sendMessage(message: RPC<*>, protocolPid: Int = kademliaId, instantSend: Boolean = false) {
         syncRoutingTable(message.destNodeId)
 
         val src: Node = getNode(nodeId)!!
         val dest: Node = getNode(message.destNodeId)!!
 
-        if (src != dest) {
+        if (!instantSend && src != dest) {
             val transport = src.getProtocol(transportPid) as UnreliableTransport
             transport.send(src, dest, message, protocolPid)
         } else EDSimulator.add(0, message, src, protocolPid)
@@ -264,7 +264,7 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
             }
             is RPCTimeout -> {
                 if (sentRpcs.containsKey(event.msgId)) {
-                    print("${CommonState.getTime()}  -> RPC timeout")
+                    println("${CommonState.getTime()}  -> RPC timeout")
                     // Remove from routing table since no RPC response
                     routingTable.removeNeighbour(event.nodeId)
                     // timeout occurred and RPC not received
