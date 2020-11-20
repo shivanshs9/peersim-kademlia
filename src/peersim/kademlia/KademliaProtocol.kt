@@ -222,16 +222,16 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
         routingTable.addNeighbour(targetNodeId)
     }
 
-    fun sendMessage(message: RPC<*>, protocolPid: Int = kademliaId, instantSend: Boolean = false) {
+    fun sendMessage(message: RPC<*>, protocolPid: Int = kademliaId, forceDelay: Long? = null) {
         syncRoutingTable(message.destNodeId)
 
         val src: Node = getNode(nodeId)!!
         val dest: Node = getNode(message.destNodeId)!!
 
-        if (!instantSend && src != dest) {
+        if (forceDelay == null && src != dest) {
             val transport = src.getProtocol(transportPid) as UnreliableTransport
             transport.send(src, dest, message, protocolPid)
-        } else EDSimulator.add(0, message, src, protocolPid)
+        } else EDSimulator.add(forceDelay ?: 0, message, src, protocolPid)
     }
 
     override fun processEvent(node: Node, pid: Int, event: Any?) {
