@@ -9,7 +9,7 @@ import java.math.BigInteger
 /**
  * Created by shivanshs9 on 18/04/20.
  */
-class StoreValueOperation(
+open class StoreValueOperation(
         protocolPid: Int,
         nodeId: BigInteger,
         key: BigInteger,

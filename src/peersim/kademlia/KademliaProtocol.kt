@@ -158,7 +158,10 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
 
     private fun storeInDht(message: StorePrimitive) {
         message.data?.also {
-            dhtTable.store(it.first, it.second)
+            when (message.type) {
+                StorePrimitive.TYPE_APPEND -> dhtTable.append(it.first, it.second)
+                else -> dhtTable.store(it.first, it.second)
+            }
         }
     }
 
@@ -180,6 +183,19 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
             sendMessage(storeMsg)
         }
         dhtTable.store(message.data.first, message.data.second)
+        val response = ResultStoreValueOperation(message)
+        sendMessage(response, protocolPid = response.protocolPid)
+    }
+
+    private fun continueWithAppend(message: ListAppendOperation, neighbors: Set<BigInteger>?) = neighbors?.also { neighbors ->
+        if (message.data == null) return@also
+        neighbors.forEach {
+            val storeMsg = StorePrimitive(nodeId, it, message.data).apply {
+                type = StorePrimitive.TYPE_APPEND
+            }
+            sendMessage(storeMsg)
+        }
+        dhtTable.append(message.data.first, message.data.second)
         val response = ResultStoreValueOperation(message)
         sendMessage(response, protocolPid = response.protocolPid)
     }
@@ -272,9 +288,13 @@ class KademliaProtocol(val prefix: String) : EDProtocol, DHTProtocolInterface {
                     if (msg != null) handleNodeLookupTimeout(event, msg)
                 }
             }
+            is ListAppendOperation -> iterativeStore(event)
             is StoreValueOperation -> iterativeStore(event)
             is ResultFindNodeOperation -> {
-                if (event.requestOp is StoreValueOperation) continueWithStore(event.requestOp, event.data)
+                when (event.requestOp) {
+                    is ListAppendOperation -> continueWithAppend(event.requestOp, event.data)
+                    is StoreValueOperation -> continueWithStore(event.requestOp, event.data)
+                }
             }
         }
     }

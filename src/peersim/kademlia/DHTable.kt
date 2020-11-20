@@ -16,6 +16,12 @@ class DHTable : Cloneable {
         hashTable[key] = value
     }
 
+    fun append(key: BigInteger, value: Any) {
+        val origLst = hashTable.getOrElse(key) { mutableListOf<Any>() } as MutableList<Any>
+        origLst.add(value)
+        hashTable[key] = origLst
+    }
+
     override fun clone(): Any = DHTable()
 
     companion object {

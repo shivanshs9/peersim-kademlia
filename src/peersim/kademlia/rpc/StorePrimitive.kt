@@ -12,6 +12,7 @@ class StorePrimitive(
 ) : RPCPrimitive<Pair<BigInteger, Any>>(srcNodeId, destNodeId, data, type = TYPE_STORE) {
     companion object {
         val TYPE_STORE: Int = "store".toAscii()
+        val TYPE_APPEND: Int = "append".toAscii()
     }
 }
 
