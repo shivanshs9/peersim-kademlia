@@ -84,13 +84,10 @@ public class Turbulence implements Control {
 	private double p_rem;
 
 	private int delayStart;
-	private long startTime;
 	private long maxChange;
 
 	// ______________________________________________________________________________________________
 	public Turbulence(String prefix) {
-		startTime = System.currentTimeMillis();
-
 		this.prefix = prefix;
 		kademliaid = Configuration.getPid(this.prefix + "." + PAR_PROT);
 		transportid = Configuration.getPid(this.prefix + "." + PAR_TRANSPORT);
@@ -201,7 +198,7 @@ public class Turbulence implements Control {
 
 	// ______________________________________________________________________________________________
 	public boolean execute() {
-		if (System.currentTimeMillis() - startTime < delayStart) return false;
+		if (CommonState.getTime() < delayStart) return false;
 
 		// throw the dice
 		double dice = CommonState.r.nextDouble();
